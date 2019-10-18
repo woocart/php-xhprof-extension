@@ -94,6 +94,10 @@ void tracing_callgraph_bucket_free(xhprof_callgraph_bucket *bucket)
         zend_string_release(bucket->child_function);
     }
 
+    if (bucket->component) {
+        zend_string_release(bucket->component);
+    }
+
     efree(bucket);
 }
 
@@ -217,11 +221,13 @@ void tracing_callgraph_append_to_array(zval *return_value TSRMLS_DC)
 
         while (bucket) {
             tracing_callgraph_get_parent_child_name(bucket, symbol, sizeof(symbol) TSRMLS_CC);
-
             array_init(stats);
             add_assoc_long(stats, "ct", bucket->count);
             add_assoc_long(stats, "wt", bucket->wall_time);
 
+            if(bucket->component != NULL){
+                add_assoc_str(stats, "cp", bucket->component);
+            }
             if (TXRG(flags) & TIDEWAYS_XHPROF_FLAGS_MEMORY_ALLOC) {
                 add_assoc_long(stats, "mem.na", bucket->num_alloc);
                 add_assoc_long(stats, "mem.nf", bucket->num_free);

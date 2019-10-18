@@ -99,6 +99,36 @@ static zend_always_inline zend_string* tracing_get_function_name(zend_execute_da
     return curr_func->common.function_name;
 }
 
+
+/* Get location of the file where this function is defiend */
+static zend_always_inline zend_string* tracing_get_file_name(zend_execute_data *data TSRMLS_DC)
+{
+    zend_class_entry *scope;
+    zend_function *curr_func;
+
+    if (!data) {
+        return NULL;
+    }
+
+    curr_func = data->func;
+    if (!curr_func->common.function_name) {
+        // This branch includes execution of eval and include/require(_once) calls
+        // We assume it is not 1999 anymore and not much PHP code runs in the
+        // body of a file and if it is, we are ok with adding it to the caller's wt.
+        return NULL;
+    }
+
+    scope = curr_func->common.scope;
+
+    if (scope && &scope->info != NULL && &scope->info.user != NULL) {
+        zend_string_addref(scope->info.user.filename);
+    } else{
+        return NULL;
+    }
+
+    return scope->info.user.filename;
+}
+
 zend_always_inline static int tracing_enter_frame_callgraph(zend_string *root_symbol, zend_execute_data *execute_data TSRMLS_DC)
 {
     zend_string *function_name = (root_symbol != NULL) ? zend_string_copy(root_symbol) : tracing_get_function_name(execute_data TSRMLS_CC);
@@ -115,6 +145,7 @@ zend_always_inline static int tracing_enter_frame_callgraph(zend_string *root_sy
     current_frame->function_name = function_name;
     current_frame->previous_frame = TXRG(callgraph_frames);
     current_frame->recurse_level = 0;
+    current_frame->component = tracing_get_file_name(execute_data TSRMLS_CC);
     current_frame->wt_start = time_milliseconds(TXRG(clock_source), TXRG(timebase_factor));
 
     if (TXRG(flags) & TIDEWAYS_XHPROF_FLAGS_CPU) {
@@ -174,6 +205,7 @@ zend_always_inline static void tracing_exit_frame_callgraph(TSRMLS_D)
         bucket->key = key;
         bucket->child_class = current_frame->class_name ? zend_string_copy(current_frame->class_name) : NULL;
         bucket->child_function = zend_string_copy(current_frame->function_name);
+        bucket->component = current_frame->component ? zend_string_copy(current_frame->component): NULL;
 
         if (previous) {
             bucket->parent_class = previous->class_name ? zend_string_copy(current_frame->previous_frame->class_name) : NULL;

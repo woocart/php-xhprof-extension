@@ -27,7 +27,7 @@ $output = tideways_xhprof_disable();
 print_canonical($output);
 --EXPECTF--
 call_user_func==>foo                    : ct=       1; wt=*;
-call_user_func_array==>class@anonymous::__invoke: ct=       1; wt=*;
+call_user_func_array==>class@anonymous::__invoke: cp=xhprof_007.php; ct=       1; wt=*;
 call_user_func_array==>foo              : ct=       1; wt=*;
 call_user_func_array==>{closure}        : ct=       1; wt=*;
 main()                                  : ct=       1; wt=*;

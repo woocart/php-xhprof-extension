@@ -23,7 +23,7 @@ function print_canonical($xhprof_data)
     $ignoreFunctions = array('strlen', 'is_array');
 
     ksort($xhprof_data);
-    foreach($xhprof_data as $func => $metrics) {
+    foreach ($xhprof_data as $func => $metrics) {
         foreach ($ignoreFunctions as $ignoreFunction) {
             if (strpos($func, "==>" . $ignoreFunction) !== false) {
                 continue 2;
@@ -37,10 +37,14 @@ function print_canonical($xhprof_data)
             // Only call counts are stable.
             // Wild card everything else. We still print
             // the metric name to ensure it was collected.
-            if (!in_array($name, array("ct"))) {
+            if (!in_array($name, array("ct", "cp"))) {
                 $value = "*";
             } else {
                 $value = str_pad($value, 8, " ", STR_PAD_LEFT);
+                if ($name == "cp") {
+                    $value = explode("/", $value);
+                    $value = $value[count($value)-1];
+                }
             }
 
             echo " {$name}={$value};";

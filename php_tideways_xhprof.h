@@ -32,6 +32,7 @@ typedef struct xhprof_callgraph_bucket_t {
     zend_ulong key;
     zend_string *parent_class;
     zend_string *parent_function;
+    zend_string *component;
     int parent_recurse_level;
     zend_string *child_class;
     zend_string *child_function;
@@ -55,6 +56,7 @@ struct xhprof_frame_t {
     struct xhprof_frame_t   *previous_frame;        /* ptr to prev entry being profiled */
     zend_string         *function_name;
     zend_string         *class_name;
+    zend_string         *component;
     uint64              wt_start;           /* start value for wall clock timer */
     uint64              cpu_start;         /* start value for CPU clock timer */
     long int            mu_start;                    /* memory usage */
